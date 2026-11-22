@@ -1,50 +1,24 @@
-name: Build APK
-on:
-  push:
-    tags: ["v*"]
-  workflow_dispatch:
+[app]
+title = GoldBull
+package.name = rynok
+package.domain = org.rynok
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas
+version = 0.2
+icon.filename = %(source.dir)s/icon.png
+requirements = python3==3.11.5,hostpython3==3.11.5,kivy==2.3.0,pyjnius,android,openssl,certifi
+orientation = portrait
+fullscreen = 0
+android.archs = arm64-v8a
+android.allow_backup = True
+android.accept_sdk_license = True
+android.api = 33
+android.minapi = 21
+android.ndk = 25b
+android.permissions = INTERNET
+android.extra_manifest_application_arguments = extra_manifest_application_arguments.xml
+p4a.branch = v2024.01.21
 
-permissions:
-  contents: write
-
-jobs:
-  build:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.buildozer
-            .buildozer
-          key: buildozer-${{ hashFiles('buildozer.spec') }}
-          restore-keys: buildozer-
-      - name: Restore signing key
-        env:
-          KEY_PASS: ${{ secrets.KEY_PASS }}
-        run: |
-          mkdir -p ~/.android
-          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in signing/debug.keystore.enc -out ~/.android/debug.keystore -pass env:KEY_PASS
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-          pip install buildozer "cython<3"
-      - name: Bump version
-        run: |
-          sed -i "s/^version *=.*/version = 1.0.${{ github.run_number }}\nandroid.numeric_version = $((1000 + ${{ github.run_number }}))/" buildozer.spec
-          grep -n "version" buildozer.spec
-      - name: Build
-        run: yes | buildozer android debug
-      - uses: actions/upload-artifact@v4
-        with:
-          name: app-apk
-          path: bin/*.apk
-      - name: Publ
+[buildozer]
+log_level = 2
+warn_on_root = 1
